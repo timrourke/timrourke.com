@@ -11,9 +11,9 @@ func ConnectToDB(username string, password string, dbname string) (*sqlx.DB, err
 	connectionString := fmt.Sprintf("%s:%s@/%s?charset=utf8&parseTime=True",
 		username, password, dbname)
 
-	db, err := sqlx.Open("mysql", connectionString)
-	defer db.Close()
+	db, err := sqlx.Connect("mysql", connectionString)
 	if err != nil {
+		fmt.Println("database error", err)
 		return nil, errors.Wrap(err, "could not connect to database")
 	}
 

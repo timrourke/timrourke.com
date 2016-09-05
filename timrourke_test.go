@@ -1,8 +1,10 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/DATA-DOG/godog"
+	"github.com/DATA-DOG/godog/gherkin"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -21,7 +23,7 @@ func (a *apiFeature) iSendRequestTo(method, endpoint string) error {
 	if err != nil {
 		return err
 	}
-	initRouter().ServeHTTP(a.resp, req)
+	initRouter(initDB()).ServeHTTP(a.resp, req)
 
 	// handle panic
 	defer func() {
@@ -60,6 +62,33 @@ func (a *apiFeature) theResponseShouldMatchText(expectedResponseText string) err
 	return nil
 }
 
+func (a *apiFeature) theResponseShouldMatchJson(expectedJson *gherkin.DocString) error {
+	var (
+		expected, actual []byte
+		data             interface{}
+		err              error
+	)
+
+	// Attempt to unmarshal json to verify its validity from feature file
+	if err = json.Unmarshal([]byte(expectedJson.Content), &data); err != nil {
+		return err
+	}
+
+	// Remarshal json so its format is standardized
+	if expected, err = json.Marshal(data); err != nil {
+		return err
+	}
+
+	actual = a.resp.Body.Bytes()
+	if string(actual) != string(expected) {
+		return fmt.Errorf("expected json %s, does not match actual: %s",
+			string(expected),
+			string(actual))
+	}
+
+	return nil
+}
+
 func FeatureContext(s *godog.Suite) {
 	api := &apiFeature{}
 
@@ -68,4 +97,5 @@ func FeatureContext(s *godog.Suite) {
 	s.Step(`^I send "([^"]*)" request to "([^"]*)"$`, api.iSendRequestTo)
 	s.Step(`^the response code should be (\d+)$`, api.theResponseCodeShouldBe)
 	s.Step(`^the response should match text "([^"]*)"$`, api.theResponseShouldMatchText)
+	s.Step(`^the response should match json:$`, api.theResponseShouldMatchJson)
 }
