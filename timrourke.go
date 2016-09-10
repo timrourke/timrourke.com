@@ -79,6 +79,7 @@ func initDB() *sqlx.DB {
 	mysqlUser := os.Getenv("MYSQL_USER")
 	mysqlPass := os.Getenv("MYSQL_PASSWORD")
 	mysqlDBName := os.Getenv("MYSQL_DBNAME")
+
 	DB, err := db.ConnectToDB(mysqlUser, mysqlPass, mysqlDBName)
 	if err != nil {
 		logError(err)
@@ -94,7 +95,7 @@ func initRouter(DB *sqlx.DB) *gin.Engine {
 
 	api := api2go.NewAPIWithRouting(
 		"api",
-		api2go.NewStaticResolver("/"),
+		api2go.NewStaticResolver("http://localhost:8000"),
 		gingonic.New(r),
 	)
 

@@ -11,32 +11,45 @@ import (
 	"strconv"
 )
 
+// NewUserStorage returns a new instance of UserStorage
 func NewUserStorage(DB *sqlx.DB) *UserStorage {
 	return &UserStorage{DB}
 }
 
+// UserStorage forms SQL queries for users
 type UserStorage struct {
 	DB *sqlx.DB
 }
 
-func (s *UserStorage) GetAll() ([]model.User, error) {
-	var users []model.User
+// GetAll selects a list of users
+func (s *UserStorage) GetAll(params QueryParams) (uint, []model.User, error) {
+	var (
+		users []model.User
+		count uint
+	)
 
-	err := s.DB.Select(&users, "SELECT * FROM users")
-	if err != nil {
+	err := s.DB.Select(&users,
+		"SELECT * FROM users LIMIT ?,?",
+		params.Offset,
+		params.Limit,
+	)
+
+	errCount := s.DB.Get(&count, "SELECT COUNT(*) FROM users")
+	if err != nil || errCount != nil {
 		errMessage := "Server error retrieving all users"
 
-		return nil, api2go.NewHTTPError(
+		return 0, nil, api2go.NewHTTPError(
 			errors.New(errMessage),
 			errMessage,
 			http.StatusInternalServerError)
 	}
 
-	return users, nil
+	return count, users, nil
 }
 
+// GetOne selects a single user
 func (s *UserStorage) GetOne(id string) (*model.User, error) {
-	intId, err := strconv.ParseInt(id, 10, 64)
+	intID, err := strconv.ParseInt(id, 10, 64)
 	if err != nil {
 		errMessage := fmt.Sprintf("User id must be integer: %s", id)
 
@@ -45,10 +58,12 @@ func (s *UserStorage) GetOne(id string) (*model.User, error) {
 			errMessage,
 			http.StatusBadRequest)
 	}
+
 	var user model.User
-	err = s.DB.Get(&user, "SELECT * FROM users WHERE id=?", intId)
+
+	err = s.DB.Get(&user, "SELECT * FROM users WHERE id=?", intID)
 	if err == sql.ErrNoRows {
-		errMessage := fmt.Sprintf("No user found with the id %d", intId)
+		errMessage := fmt.Sprintf("No user found with the id %d", intID)
 
 		return &user, api2go.NewHTTPError(
 			errors.New(errMessage),
@@ -56,9 +71,11 @@ func (s *UserStorage) GetOne(id string) (*model.User, error) {
 			http.StatusNotFound,
 		)
 	}
+
 	return &user, err
 }
 
+// Insert inserts a single user
 func (s *UserStorage) Insert(c model.User) (*model.User, error) {
 	result, err := s.DB.NamedExec(`INSERT INTO users (
 		username,
@@ -74,36 +91,30 @@ func (s *UserStorage) Insert(c model.User) (*model.User, error) {
 		return &model.User{}, err
 	}
 
-	insertId, err := result.LastInsertId()
+	insertID, err := result.LastInsertId()
 	if err != nil {
 		return &model.User{}, err
 	}
 
-	c.SetID(fmt.Sprintf("%d", insertId))
+	c.SetID(fmt.Sprintf("%d", insertID))
 	return s.GetOne(c.GetID())
 }
 
+// Delete deletes a single user
 func (s *UserStorage) Delete(id string) error {
-	intId, err := strconv.ParseInt(id, 10, 64)
+	_, err := strconv.ParseInt(id, 10, 64)
 	if err != nil {
 		return fmt.Errorf("User id must be integer: %s", id)
 	}
 
-	result, err := s.DB.Exec("DELETE FROM users WHERE id=? LIMIT 1", id)
+	_, err = s.DB.Exec("DELETE FROM users WHERE id=? LIMIT 1", id)
 	if err != nil {
 		return err
-	}
-
-	numDeleted, err := result.RowsAffected()
-	if err != nil {
-		return err
-	}
-	if numDeleted == 0 {
-		return fmt.Errorf("No user found with the id %d", intId)
 	}
 	return nil
 }
 
+// Update updates a single user
 func (s *UserStorage) Update(c model.User) error {
 	return nil
 }
