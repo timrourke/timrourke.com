@@ -2,13 +2,10 @@ package resource
 
 import (
 	"errors"
-	"fmt"
 	"github.com/manyminds/api2go"
 	"github.com/timrourke/timrourke.com/model"
 	"github.com/timrourke/timrourke.com/storage"
 	"net/http"
-	"strconv"
-	"strings"
 )
 
 // UserResource defines interface to storage layer
@@ -16,104 +13,55 @@ type UserResource struct {
 	UserStorage *storage.UserStorage
 }
 
-const defaultPaginationLimit = 20
-
-// ParseQueryParams parses request for query params
-func (s UserResource) ParseQueryParams(r api2go.Request) (storage.QueryParams, error) {
-	var (
-		queryLimit   uint64 = defaultPaginationLimit
-		queryOffset  uint64
-		queryOrderBy string
-	)
-
-	requestParams := r.QueryParams
-
-	offset, hasOffset := requestParams["page[offset]"]
-	limit, hasLimit := requestParams["page[limit]"]
-	pageNum, hasPageNum := requestParams["page[number]"]
-	pageSize, hasPageSize := requestParams["page[size]"]
-	sorts, hasSorts := requestParams["sort"]
-
-	if hasLimit {
-		parsedLimit, err := strconv.ParseUint(limit[0], 10, 64)
-		if err != nil {
-			return storage.QueryParams{}, err
-		}
-
-		queryLimit = parsedLimit
-	} else if hasPageSize {
-		parsedPageSize, err := strconv.ParseUint(pageSize[0], 10, 64)
-		if err != nil {
-			return storage.QueryParams{}, err
-		}
-
-		queryLimit = parsedPageSize
-	}
-
-	if queryLimit > 100 {
-		queryLimit = 100
-	}
-
-	if hasPageNum {
-		parsedPageNum, err := strconv.ParseUint(pageNum[0], 10, 64)
-		if err != nil {
-			return storage.QueryParams{}, nil
-		}
-
-		queryOffset = (parsedPageNum - 1) * queryLimit
-	} else if hasOffset {
-		parsedOffset, err := strconv.ParseUint(offset[0], 10, 64)
-		if err != nil {
-			return storage.QueryParams{}, nil
-		}
-
-		queryOffset = parsedOffset
-	}
-
-	if hasSorts {
-		dir := "ASC"
-		numSorts := len(sorts)
-		queryOrderBy = ""
-
-		for i, v := range sorts {
-			if strings.HasPrefix(v, "-") {
-				dir = "DESC"
-				v = strings.TrimPrefix(v, "-")
-			} else {
-				dir = "ASC"
-			}
-
-			if (i + 1) < numSorts {
-				dir = fmt.Sprintf("%s, ", dir)
-			}
-
-			queryOrderBy = fmt.Sprintf("%s%s %s", queryOrderBy, v, dir)
-		}
-	}
-
-	params := storage.QueryParams{
-		Limit:   queryLimit,
-		Offset:  queryOffset,
-		OrderBy: queryOrderBy,
-	}
-
-	return params, nil
+var UserFilterableFields = map[string]bool{
+	"id":         true,
+	"created-at": false,
+	"updated-at": false,
+	"email":      true,
+	"username":   true,
 }
 
 // FindAll to satisfy api2go data source interface
 func (s UserResource) FindAll(r api2go.Request) (api2go.Responder, error) {
-	params, _ := s.ParseQueryParams(r)
+	params, err := ParseQueryParams(r, UserFilterableFields)
+	if err != nil {
+		return &Response{}, api2go.NewHTTPError(
+			err,
+			err.Error(),
+			http.StatusBadRequest,
+		)
+	}
+
 	_, result, err := s.UserStorage.GetAll(params)
+	if err != nil {
+		return &Response{}, api2go.NewHTTPError(
+			err,
+			err.Error(),
+			http.StatusInternalServerError)
+	}
+
 	return &Response{Res: result}, err
 }
 
 // PaginatedFindAll can be used to load users in chunks
 func (s UserResource) PaginatedFindAll(r api2go.Request) (uint, api2go.Responder, error) {
-	params, _ := s.ParseQueryParams(r)
+	params, err := ParseQueryParams(r, UserFilterableFields)
+	if err != nil {
+		return 0, &Response{}, api2go.NewHTTPError(
+			err,
+			err.Error(),
+			http.StatusBadRequest,
+		)
+	}
+
 	count, result, err := s.UserStorage.GetAll(params)
 	if err != nil {
-		return 0, &Response{}, err
+		return 0, &Response{}, api2go.NewHTTPError(
+			err,
+			err.Error(),
+			http.StatusInternalServerError)
 	}
+
 	return count, &Response{Res: result}, nil
 }
 
@@ -133,7 +81,15 @@ func (s UserResource) Create(obj interface{}, r api2go.Request) (api2go.Responde
 			"Invalid instance given",
 			http.StatusBadRequest)
 	}
+
 	newUser, err := s.UserStorage.Insert(user)
+	if err != nil {
+		return &Response{}, api2go.NewHTTPError(
+			errors.New("Internal Server Error"),
+			"Internal Server Error",
+			http.StatusInternalServerError)
+	}
+
 	return &Response{Res: newUser, Code: http.StatusCreated}, err
 }
 

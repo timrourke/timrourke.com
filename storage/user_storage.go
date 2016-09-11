@@ -28,20 +28,20 @@ func (s *UserStorage) GetAll(params QueryParams) (uint, []model.User, error) {
 		count uint
 	)
 
+	sql := fmt.Sprintf("SELECT * FROM users ORDER BY %s LIMIT ?,?", params.OrderBy)
 	err := s.DB.Select(&users,
-		"SELECT * FROM users LIMIT ?,?",
+		sql,
 		params.Offset,
 		params.Limit,
 	)
 
+	// Get count of all users for pagination
 	errCount := s.DB.Get(&count, "SELECT COUNT(*) FROM users")
-	if err != nil || errCount != nil {
-		errMessage := "Server error retrieving all users"
 
-		return 0, nil, api2go.NewHTTPError(
-			errors.New(errMessage),
-			errMessage,
-			http.StatusInternalServerError)
+	if err != nil || errCount != nil {
+		err := errors.New("Server error retrieving all users")
+
+		return 0, nil, err
 	}
 
 	return count, users, nil
