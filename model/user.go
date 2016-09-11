@@ -13,7 +13,13 @@ type User struct {
 	Username     string    `json:"username"`
 	Email        string    `json:"email"`
 	PasswordHash string    `json:"-" db:"password_hash"`
-	exists       bool      `sql:"-"`
+}
+
+type NewUser struct {
+	Username             string `json:"username"`
+	Email                string `json:"email"`
+	Password             string `json:"password"`
+	PasswordConfirmation string `json:"password-confirmation"`
 }
 
 func (m User) GetID() string {

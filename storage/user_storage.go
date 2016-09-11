@@ -1,13 +1,9 @@
 package storage
 
 import (
-	"database/sql"
-	"errors"
 	"fmt"
 	"github.com/jmoiron/sqlx"
-	"github.com/manyminds/api2go"
 	"github.com/timrourke/timrourke.com/model"
-	"net/http"
 	"strconv"
 )
 
@@ -38,39 +34,20 @@ func (s *UserStorage) GetAll(params QueryParams) (uint, []model.User, error) {
 	// Get count of all users for pagination
 	errCount := s.DB.Get(&count, "SELECT COUNT(*) FROM users")
 
-	if err != nil || errCount != nil {
-		err := errors.New("Server error retrieving all users")
-
+	if err != nil {
 		return 0, nil, err
+	} else if errCount != nil {
+		return 0, nil, errCount
 	}
 
 	return count, users, nil
 }
 
 // GetOne selects a single user
-func (s *UserStorage) GetOne(id string) (*model.User, error) {
-	intID, err := strconv.ParseInt(id, 10, 64)
-	if err != nil {
-		errMessage := fmt.Sprintf("User id must be integer: %s", id)
-
-		return &model.User{}, api2go.NewHTTPError(
-			errors.New(errMessage),
-			errMessage,
-			http.StatusBadRequest)
-	}
-
+func (s *UserStorage) GetOne(ID string) (*model.User, error) {
 	var user model.User
 
-	err = s.DB.Get(&user, "SELECT * FROM users WHERE id=?", intID)
-	if err == sql.ErrNoRows {
-		errMessage := fmt.Sprintf("No user found with the id %d", intID)
-
-		return &user, api2go.NewHTTPError(
-			errors.New(errMessage),
-			errMessage,
-			http.StatusNotFound,
-		)
-	}
+	err := s.DB.Get(&user, "SELECT * FROM users WHERE id=?", ID)
 
 	return &user, err
 }
@@ -96,7 +73,9 @@ func (s *UserStorage) Insert(c model.User) (*model.User, error) {
 		return &model.User{}, err
 	}
 
+	// Set ID on return struct for rendering to json
 	c.SetID(fmt.Sprintf("%d", insertID))
+
 	return s.GetOne(c.GetID())
 }
 
@@ -115,6 +94,16 @@ func (s *UserStorage) Delete(id string) error {
 }
 
 // Update updates a single user
-func (s *UserStorage) Update(c model.User) error {
+func (s *UserStorage) Update(c *model.User) error {
+	_, err := s.DB.NamedExec(`UPDATE users SET 
+		username=:username,
+		email=:email,
+		password_hash=:password_hash
+		WHERE id=:id`, &c)
+
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
