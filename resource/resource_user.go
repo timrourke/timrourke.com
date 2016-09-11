@@ -2,11 +2,13 @@ package resource
 
 import (
 	"errors"
+	"fmt"
 	"github.com/manyminds/api2go"
 	"github.com/timrourke/timrourke.com/model"
 	"github.com/timrourke/timrourke.com/storage"
 	"net/http"
 	"strconv"
+	"strings"
 )
 
 // UserResource defines interface to storage layer
@@ -19,8 +21,9 @@ const defaultPaginationLimit = 20
 // ParseQueryParams parses request for query params
 func (s UserResource) ParseQueryParams(r api2go.Request) (storage.QueryParams, error) {
 	var (
-		queryLimit  uint64 = defaultPaginationLimit
-		queryOffset uint64
+		queryLimit   uint64 = defaultPaginationLimit
+		queryOffset  uint64
+		queryOrderBy string
 	)
 
 	requestParams := r.QueryParams
@@ -29,6 +32,7 @@ func (s UserResource) ParseQueryParams(r api2go.Request) (storage.QueryParams, e
 	limit, hasLimit := requestParams["page[limit]"]
 	pageNum, hasPageNum := requestParams["page[number]"]
 	pageSize, hasPageSize := requestParams["page[size]"]
+	sorts, hasSorts := requestParams["sort"]
 
 	if hasLimit {
 		parsedLimit, err := strconv.ParseUint(limit[0], 10, 64)
@@ -66,9 +70,31 @@ func (s UserResource) ParseQueryParams(r api2go.Request) (storage.QueryParams, e
 		queryOffset = parsedOffset
 	}
 
+	if hasSorts {
+		dir := "ASC"
+		numSorts := len(sorts)
+		queryOrderBy = ""
+
+		for i, v := range sorts {
+			if strings.HasPrefix(v, "-") {
+				dir = "DESC"
+				v = strings.TrimPrefix(v, "-")
+			} else {
+				dir = "ASC"
+			}
+
+			if (i + 1) < numSorts {
+				dir = fmt.Sprintf("%s, ", dir)
+			}
+
+			queryOrderBy = fmt.Sprintf("%s%s %s", queryOrderBy, v, dir)
+		}
+	}
+
 	params := storage.QueryParams{
-		Limit:  queryLimit,
-		Offset: queryOffset,
+		Limit:   queryLimit,
+		Offset:  queryOffset,
+		OrderBy: queryOrderBy,
 	}
 
 	return params, nil
