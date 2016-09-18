@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/jmoiron/sqlx"
 	"github.com/timrourke/timrourke.com/model"
+	"github.com/timrourke/timrourke.com/query"
 	"strconv"
 )
 
@@ -18,18 +19,31 @@ type UserStorage struct {
 }
 
 // GetAll selects a list of users
-func (s *UserStorage) GetAll(params QueryParams) (uint, []model.User, error) {
+func (s *UserStorage) GetAll(q *query.Query) (uint, []model.User, error) {
 	var (
 		users []model.User
 		count uint
 	)
 
-	sql := fmt.Sprintf("SELECT * FROM users ORDER BY %s LIMIT ?,?", params.OrderBy)
-	err := s.DB.Select(&users,
-		sql,
-		params.Offset,
-		params.Limit,
-	)
+	q.Select("users.*").From("users users")
+
+	sql, boundValues := q.Compile()
+
+	rows, err := s.DB.NamedQuery(sql, boundValues)
+	if err != nil {
+		return 0, nil, err
+	}
+
+	defer rows.Close()
+	for rows.Next() {
+		var m model.User
+		err = rows.StructScan(&m)
+		if err != nil {
+			return 0, nil, err
+		}
+
+		users = append(users, m)
+	}
 
 	// Get count of all users for pagination
 	errCount := s.DB.Get(&count, "SELECT COUNT(*) FROM users")

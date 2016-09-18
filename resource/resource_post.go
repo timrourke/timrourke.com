@@ -12,45 +12,44 @@ import (
 	"strconv"
 )
 
-// UserResource defines interface to storage layer
-type UserResource struct {
-	UserStorage *storage.UserStorage
+// PostResource defines interface to storage layer
+type PostResource struct {
+	PostStorage *storage.PostStorage
 }
 
-// UserFilterableFields is a map of fields a user can sort or filter by, where
+// PostFilterableFields is a map of fields a post can sort or filter by, where
 // the key is the jsonapi field name and the value is whether a filter should
 // be performed using strict equality (true), or using a LIKE statement (false),
 // in the SQL generated for the query
-var UserFilterableFields = map[string]bool{
+var PostFilterableFields = map[string]bool{
 	"id":         true,
 	"created-at": false,
 	"updated-at": false,
-	"email":      true,
-	"username":   true,
+	"permalink":  true,
 }
 
-func getUsersByPostsID(request api2go.Request, q *query.Query) *query.Query {
-	postsID, ok := request.QueryParams["postsID"]
+func getPostsByUsersID(request api2go.Request, q *query.Query) *query.Query {
+	usersID, ok := request.QueryParams["usersID"]
 
 	if ok {
-		q.Join("LEFT JOIN posts posts", "posts.user_id = users.id")
-		q.Where("posts.id = :postsID")
-		q.Bind("postsID", postsID[0])
+		q.Where("posts.user_id = :usersID")
+		q.Bind("usersID", usersID[0])
 	}
 
 	return q
 }
 
-// UserRelationshipsByParam defines a map where the key is the query param and
-// the function is the RelationshipFunc for modifying the query to get the given
-// relationship
-var UserRelationshipsByParam = map[string]RelationshipFunc{
-	"postsID": getUsersByPostsID,
+// PostRelationships defines the functions for modifying a Query to select...
+var PostRelationships = map[string]RelationshipFunc{
+	"usersID": getPostsByUsersID,
 }
 
 // FindAll to satisfy api2go data source interface
-func (s UserResource) FindAll(r api2go.Request) (api2go.Responder, error) {
-	params, err := ParseQueryParams(r, UserFilterableFields, UserRelationshipsByParam)
+func (s PostResource) FindAll(r api2go.Request) (api2go.Responder, error) {
+	fmt.Println("params from request findAll post")
+	fmt.Printf("%+v", r.QueryParams)
+	params, err := ParseQueryParams(r, PostFilterableFields, PostRelationships)
+	fmt.Println("params in posts findall", params)
 	if err != nil {
 		return &Response{}, api2go.NewHTTPError(
 			err,
@@ -59,7 +58,7 @@ func (s UserResource) FindAll(r api2go.Request) (api2go.Responder, error) {
 		)
 	}
 
-	_, result, err := s.UserStorage.GetAll(params)
+	_, result, err := s.PostStorage.GetAll(params)
 	if err != nil {
 		return &Response{}, api2go.NewHTTPError(
 			err,
@@ -70,9 +69,11 @@ func (s UserResource) FindAll(r api2go.Request) (api2go.Responder, error) {
 	return &Response{Res: result}, err
 }
 
-// PaginatedFindAll can be used to load users in chunks
-func (s UserResource) PaginatedFindAll(r api2go.Request) (uint, api2go.Responder, error) {
-	params, err := ParseQueryParams(r, UserFilterableFields, UserRelationshipsByParam)
+// PaginatedFindAll can be used to load posts in chunks
+func (s PostResource) PaginatedFindAll(r api2go.Request) (uint, api2go.Responder, error) {
+	fmt.Println("params from request")
+	fmt.Printf("%+v", r.QueryParams)
+	params, err := ParseQueryParams(r, PostFilterableFields, PostRelationships)
 	if err != nil {
 		return 0, &Response{}, api2go.NewHTTPError(
 			err,
@@ -81,7 +82,7 @@ func (s UserResource) PaginatedFindAll(r api2go.Request) (uint, api2go.Responder
 		)
 	}
 
-	count, result, err := s.UserStorage.GetAll(params)
+	count, result, err := s.PostStorage.GetAll(params)
 	if err != nil {
 		return 0, &Response{}, api2go.NewHTTPError(
 			err,
@@ -93,12 +94,12 @@ func (s UserResource) PaginatedFindAll(r api2go.Request) (uint, api2go.Responder
 }
 
 // FindOne to satisfy `api2go.DataSource` interface
-// this method should return the user with the given ID, otherwise an error
-func (s UserResource) FindOne(id string, r api2go.Request) (api2go.Responder, error) {
+// this method should return the post with the given ID, otherwise an error
+func (s PostResource) FindOne(id string, r api2go.Request) (api2go.Responder, error) {
 	// 400
 	_, err := strconv.ParseInt(id, 10, 64)
 	if err != nil {
-		errMessage := fmt.Sprintf("User id must be integer: %s", id)
+		errMessage := fmt.Sprintf("Post id must be integer: %s", id)
 
 		return &Response{}, api2go.NewHTTPError(
 			err,
@@ -107,9 +108,9 @@ func (s UserResource) FindOne(id string, r api2go.Request) (api2go.Responder, er
 	}
 
 	// 404
-	user, err := s.UserStorage.GetOne(id)
+	post, err := s.PostStorage.GetOne(id)
 	if err == sql.ErrNoRows {
-		errMessage := fmt.Sprintf("No user found with the id: %s", id)
+		errMessage := fmt.Sprintf("No post found with the id: %s", id)
 
 		return &Response{}, api2go.NewHTTPError(
 			err,
@@ -118,13 +119,13 @@ func (s UserResource) FindOne(id string, r api2go.Request) (api2go.Responder, er
 		)
 	}
 
-	return &Response{Res: user}, err
+	return &Response{Res: post}, err
 }
 
 // Create method to satisfy `api2go.DataSource` interface
-func (s UserResource) Create(obj interface{}, r api2go.Request) (api2go.Responder, error) {
+func (s PostResource) Create(obj interface{}, r api2go.Request) (api2go.Responder, error) {
 	// 400
-	user, ok := obj.(model.User)
+	post, ok := obj.(model.Post)
 	if !ok {
 		return &Response{}, api2go.NewHTTPError(
 			errors.New("Invalid instance given"),
@@ -133,7 +134,7 @@ func (s UserResource) Create(obj interface{}, r api2go.Request) (api2go.Responde
 	}
 
 	// 500
-	newUser, err := s.UserStorage.Insert(user)
+	newPost, err := s.PostStorage.Insert(post)
 	if err != nil {
 		return &Response{}, api2go.NewHTTPError(
 			errors.New("Internal Server Error"),
@@ -141,15 +142,15 @@ func (s UserResource) Create(obj interface{}, r api2go.Request) (api2go.Responde
 			http.StatusInternalServerError)
 	}
 
-	return &Response{Res: newUser, Code: http.StatusCreated}, err
+	return &Response{Res: newPost, Code: http.StatusCreated}, err
 }
 
 // Delete to satisfy `api2go.DataSource` interface
-func (s UserResource) Delete(id string, r api2go.Request) (api2go.Responder, error) {
+func (s PostResource) Delete(id string, r api2go.Request) (api2go.Responder, error) {
 	// 400
 	_, err := strconv.ParseInt(id, 10, 64)
 	if err != nil {
-		errMessage := fmt.Sprintf("User id must be integer: %s", id)
+		errMessage := fmt.Sprintf("Post id must be integer: %s", id)
 
 		return &Response{}, api2go.NewHTTPError(
 			err,
@@ -157,16 +158,16 @@ func (s UserResource) Delete(id string, r api2go.Request) (api2go.Responder, err
 			http.StatusBadRequest)
 	}
 
-	err = s.UserStorage.Delete(id)
+	err = s.PostStorage.Delete(id)
 	if err != nil {
 		return &Response{Code: http.StatusInternalServerError}, err
 	}
 	return &Response{Code: http.StatusNoContent}, nil
 }
 
-// Update stores all changes on the user
-func (s UserResource) Update(obj interface{}, r api2go.Request) (api2go.Responder, error) {
-	user, ok := obj.(*model.User)
+// Update stores all changes on the post
+func (s PostResource) Update(obj interface{}, r api2go.Request) (api2go.Responder, error) {
+	post, ok := obj.(*model.Post)
 
 	// 400
 	if !ok {
@@ -176,12 +177,12 @@ func (s UserResource) Update(obj interface{}, r api2go.Request) (api2go.Responde
 			http.StatusBadRequest)
 	}
 
-	id := user.GetID()
-	foundUser, err := s.UserStorage.GetOne(id)
+	id := post.GetID()
+	foundPost, err := s.PostStorage.GetOne(id)
 
 	// 404
 	if err == sql.ErrNoRows {
-		errMessage := fmt.Sprintf("No user found with the id: %s", id)
+		errMessage := fmt.Sprintf("No post found with the id: %s", id)
 
 		return &Response{}, api2go.NewHTTPError(
 			err,
@@ -197,12 +198,14 @@ func (s UserResource) Update(obj interface{}, r api2go.Request) (api2go.Responde
 			http.StatusInternalServerError)
 	}
 
-	// Update fields in user
-	foundUser.Email = user.Email
-	foundUser.Username = user.Username
-	// TODO: implement password hashing
+	// Update fields in post
+	foundPost.Title = post.Title
+	foundPost.Excerpt = post.Excerpt
+	foundPost.Content = post.Content
+	foundPost.Permalink = post.Permalink
+	// TODO: implement santization and validation
 
-	err = s.UserStorage.Update(foundUser)
+	err = s.PostStorage.Update(foundPost)
 	if err != nil {
 		return &Response{}, api2go.NewHTTPError(
 			err,
@@ -210,5 +213,5 @@ func (s UserResource) Update(obj interface{}, r api2go.Request) (api2go.Responde
 			http.StatusInternalServerError)
 	}
 
-	return &Response{Res: foundUser, Code: http.StatusNoContent}, err
+	return &Response{Res: foundPost, Code: http.StatusNoContent}, err
 }

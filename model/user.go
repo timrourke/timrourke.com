@@ -1,6 +1,7 @@
 package model
 
 import (
+	"github.com/manyminds/api2go/jsonapi"
 	"strconv"
 	"time"
 )
@@ -30,4 +31,22 @@ func (m *User) SetID(id string) error {
 	var err error
 	m.ID, err = strconv.ParseInt(id, 10, 64)
 	return err
+}
+
+// GetReferences to satisfy the jsonapi.MarshalReferences interface
+func (m User) GetReferences() []jsonapi.Reference {
+	return []jsonapi.Reference{
+		{
+			Type:        "posts",
+			Name:        "posts",
+			IsNotLoaded: true,
+		},
+	}
+}
+
+// GetReferencedIDs to satisfy the jsonapi.MarshalLinkedRelations interface
+func (m User) GetReferencedIDs() []jsonapi.ReferenceID {
+	result := []jsonapi.ReferenceID{}
+
+	return result
 }

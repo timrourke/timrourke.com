@@ -5,4 +5,5 @@ type QueryParams struct {
 	Limit   uint64
 	Offset  uint64
 	OrderBy string
+	Where   map[string]string
 }

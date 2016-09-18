@@ -4,6 +4,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"github.com/gin-gonic/contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/jmoiron/sqlx"
 	"github.com/joho/godotenv"
@@ -68,6 +69,9 @@ func run() {
 	// Initialize DB connection
 	DB := initDB()
 
+	// Expose DB to models for relationship resolutions
+	model.DB = DB
+
 	// Initialize routes
 	r := initRouter(DB)
 
@@ -99,9 +103,18 @@ func initRouter(DB *sqlx.DB) *gin.Engine {
 		gingonic.New(r),
 	)
 
+	r.Use(cors.New(cors.Config{
+		AllowedOrigins: []string{"http://localhost:4200"},
+	}))
+
 	userStorage := storage.NewUserStorage(DB)
 	api.AddResource(model.User{}, resource.UserResource{
 		UserStorage: userStorage,
+	})
+
+	postStorage := storage.NewPostStorage(DB)
+	api.AddResource(model.Post{}, resource.PostResource{
+		PostStorage: postStorage,
 	})
 
 	r.GET("/ping", getPing)

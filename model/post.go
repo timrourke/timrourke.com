@@ -34,8 +34,9 @@ func (m *Post) SetID(id string) error {
 func (m Post) GetReferences() []jsonapi.Reference {
 	return []jsonapi.Reference{
 		{
-			Type: "users",
-			Name: "users",
+			Type:         "users",
+			Name:         "user",
+			Relationship: jsonapi.ToOneRelationship,
 		},
 	}
 }
@@ -47,7 +48,7 @@ func (m Post) GetReferencedIDs() []jsonapi.ReferenceID {
 	result = append(result, jsonapi.ReferenceID{
 		ID:   m.UserId,
 		Type: "users",
-		Name: "users",
+		Name: "user",
 	})
 
 	return result
