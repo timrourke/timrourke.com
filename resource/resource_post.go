@@ -46,10 +46,8 @@ var PostRelationships = map[string]RelationshipFunc{
 
 // FindAll to satisfy api2go data source interface
 func (s PostResource) FindAll(r api2go.Request) (api2go.Responder, error) {
-	fmt.Println("params from request findAll post")
-	fmt.Printf("%+v", r.QueryParams)
+	// 400
 	params, err := ParseQueryParams(r, PostFilterableFields, PostRelationships)
-	fmt.Println("params in posts findall", params)
 	if err != nil {
 		return &Response{}, api2go.NewHTTPError(
 			err,
@@ -58,6 +56,7 @@ func (s PostResource) FindAll(r api2go.Request) (api2go.Responder, error) {
 		)
 	}
 
+	// 500
 	_, result, err := s.PostStorage.GetAll(params)
 	if err != nil {
 		return &Response{}, api2go.NewHTTPError(
@@ -71,8 +70,7 @@ func (s PostResource) FindAll(r api2go.Request) (api2go.Responder, error) {
 
 // PaginatedFindAll can be used to load posts in chunks
 func (s PostResource) PaginatedFindAll(r api2go.Request) (uint, api2go.Responder, error) {
-	fmt.Println("params from request")
-	fmt.Printf("%+v", r.QueryParams)
+	// 400
 	params, err := ParseQueryParams(r, PostFilterableFields, PostRelationships)
 	if err != nil {
 		return 0, &Response{}, api2go.NewHTTPError(
@@ -82,6 +80,7 @@ func (s PostResource) PaginatedFindAll(r api2go.Request) (uint, api2go.Responder
 		)
 	}
 
+	// 500
 	count, result, err := s.PostStorage.GetAll(params)
 	if err != nil {
 		return 0, &Response{}, api2go.NewHTTPError(
@@ -205,6 +204,7 @@ func (s PostResource) Update(obj interface{}, r api2go.Request) (api2go.Responde
 	foundPost.Permalink = post.Permalink
 	// TODO: implement santization and validation
 
+	// 500
 	err = s.PostStorage.Update(foundPost)
 	if err != nil {
 		return &Response{}, api2go.NewHTTPError(

@@ -50,6 +50,7 @@ var UserRelationshipsByParam = map[string]RelationshipFunc{
 
 // FindAll to satisfy api2go data source interface
 func (s UserResource) FindAll(r api2go.Request) (api2go.Responder, error) {
+	// 400
 	params, err := ParseQueryParams(r, UserFilterableFields, UserRelationshipsByParam)
 	if err != nil {
 		return &Response{}, api2go.NewHTTPError(
@@ -59,6 +60,7 @@ func (s UserResource) FindAll(r api2go.Request) (api2go.Responder, error) {
 		)
 	}
 
+	// 500
 	_, result, err := s.UserStorage.GetAll(params)
 	if err != nil {
 		return &Response{}, api2go.NewHTTPError(
@@ -72,6 +74,7 @@ func (s UserResource) FindAll(r api2go.Request) (api2go.Responder, error) {
 
 // PaginatedFindAll can be used to load users in chunks
 func (s UserResource) PaginatedFindAll(r api2go.Request) (uint, api2go.Responder, error) {
+	// 400
 	params, err := ParseQueryParams(r, UserFilterableFields, UserRelationshipsByParam)
 	if err != nil {
 		return 0, &Response{}, api2go.NewHTTPError(
@@ -81,6 +84,7 @@ func (s UserResource) PaginatedFindAll(r api2go.Request) (uint, api2go.Responder
 		)
 	}
 
+	// 500
 	count, result, err := s.UserStorage.GetAll(params)
 	if err != nil {
 		return 0, &Response{}, api2go.NewHTTPError(
@@ -202,6 +206,7 @@ func (s UserResource) Update(obj interface{}, r api2go.Request) (api2go.Responde
 	foundUser.Username = user.Username
 	// TODO: implement password hashing
 
+	// 500
 	err = s.UserStorage.Update(foundUser)
 	if err != nil {
 		return &Response{}, api2go.NewHTTPError(
