@@ -119,7 +119,7 @@ func (s *PostStorage) Update(c *model.Post) error {
 		title=:title,
 		excerpt=:excerpt,
 		content=:content,
-		permalink=:permalink,
+		permalink=:permalink
 		WHERE id=:id`, &c)
 
 	if err != nil {

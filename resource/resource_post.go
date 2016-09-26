@@ -28,6 +28,7 @@ var PostFilterableFields = map[string]bool{
 	"permalink":  true,
 }
 
+// Get all posts by the usersID query param. Generally provided by api2go.
 func getPostsByUsersID(request api2go.Request, q *query.Query) *query.Query {
 	usersID, ok := request.QueryParams["usersID"]
 
