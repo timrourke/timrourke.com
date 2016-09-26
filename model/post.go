@@ -2,6 +2,7 @@ package model
 
 import (
 	"errors"
+	"fmt"
 	"github.com/manyminds/api2go/jsonapi"
 	"strconv"
 	"time"
@@ -52,6 +53,19 @@ func (m Post) GetReferencedIDs() []jsonapi.ReferenceID {
 	})
 
 	return result
+}
+
+func (m Post) SetToOneReferenceID(name, ID string) error {
+	var err error
+
+	switch name {
+	case "user":
+		m.UserId = ID
+	default:
+		err = fmt.Errorf("Post has no relationship called %s", name)
+	}
+
+	return err
 }
 
 // GetReferencedStructs to satisfy the jsonapi.MarhsalIncludedRelations interface
