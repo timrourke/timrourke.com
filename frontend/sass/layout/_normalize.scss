@@ -1,0 +1,142 @@
+//-------------------------------------------- Foundation
+.clearfix:after {
+     visibility: hidden;
+     display: block;
+     font-size: 0;
+     content: " ";
+     clear: both;
+     height: 0;
+     }
+.clearfix { display: inline-block; }
+/* start commented backslash hack \*/
+* html .clearfix { height: 1%; }
+.clearfix { display: block; }
+/* close commented backslash hack */
+
+// Reference: http://jaydenseric.com/blog/forget-normalize-or-resets-lay-your-own-css-foundation
+
+*,
+*:before,
+*:after,
+*::before,
+*::after {
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  box-sizing: border-box;
+}
+
+html {
+    -ms-text-size-adjust: 100%;
+    -webkit-text-size-adjust: 100%;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    -webkit-tap-highlight-color: transparent;
+}
+body {
+    margin: 0;
+    padding:0;
+}
+iframe {
+    border: 0;
+}
+h1,
+h2,
+h3,
+h4,
+h5,
+p,
+ul,
+ol,
+figure,
+button {
+    margin: 0;
+    padding: 0;
+}
+ul, ol {
+    list-style-position:inside;
+    margin-bottom:1.5em;
+    nav & {
+        margin-bottom:0;
+    }
+}
+li {
+    display: list-item;
+}
+h1,
+h2,
+h3,
+h4,
+h5,
+p {
+    font-size: inherit;
+}
+strong {
+    font-weight: bold;
+}
+sup {
+    position: relative;
+    top: -.5em;
+    font-size: 65%;
+    line-height: 0;
+    vertical-align: baseline;
+}
+a,
+button {
+    color: inherit;
+}
+a {
+    text-decoration: none;
+    background-color: transparent;
+}
+button {
+    overflow: visible;
+    border: 0;
+    font: inherit;
+    letter-spacing: inherit;
+    background: none;
+    cursor: pointer;
+    -webkit-font-smoothing: inherit;
+    &:focus {
+        outline: 0;
+    }
+}
+::-moz-focus-inner {
+    padding: 0;
+    border: 0;
+}
+img {
+    max-width: 100%;
+    height: auto;
+    border: 0;
+}
+//Required to prevent cross-browser oddness
+svg {
+    width:100%;
+    height:auto;
+}
+svg:not(:root) {
+    overflow: hidden;
+}
+pre {
+    overflow:auto;
+}
+
+input[type="checkbox"],
+input[type="radio"] {
+    box-sizing: border-box;
+    padding: 0;
+}
+
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+    height: auto;
+}
+
+input[type="search"] {
+    -webkit-appearance: none;
+}
+
+input[type="search"]::-webkit-search-cancel-button,
+input[type="search"]::-webkit-search-decoration {
+    -webkit-appearance: none;
+}

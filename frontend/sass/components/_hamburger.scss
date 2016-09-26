@@ -1,0 +1,31 @@
+.hamburger {
+	height: 2.66667em;
+	position: relative;
+	width: 3em;
+}
+
+.hamburger:hover div {
+	background-color: $orange;
+}
+
+.hamburger__top,
+.hamburger__middle,
+.hamburger__bottom {
+	background-color: $lightyellow;
+	height: 10%;
+	position: absolute;
+	width: 100%;
+}
+
+.hamburger__top {
+	top: 0;
+}
+
+.hamburger__middle {
+	top: 45%;
+}
+
+.hamburger__bottom  {
+	top: 90%;
+}
+

@@ -1,0 +1,27 @@
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+	font-family: 'adelle-sans', sans-serif;
+}
+
+.h1 { 
+	@extend .typl8-mega;
+}
+.h2 { 
+	@extend .typl8-alpha;
+}
+.h3 { 
+	@extend .typl8-beta;
+}
+.h4 { 
+	@extend .typl8-gamma;
+}
+.h5 { 
+	@extend .typl8-delta;
+}
+.h6 { 
+	@extend .typl8-zeta;
+}

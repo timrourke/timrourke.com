@@ -1,0 +1,23 @@
+{
+  "name": "timrourke-frontend",
+  "version": "1.0.0",
+  "description": "The frontend of timrourke.com",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": {
+    "email": "tim@timrourke.com",
+    "name": "Tim Rourke",
+    "url": "http://timrourke.com/"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "browser-sync": "^2.16.0",
+    "gulp": "^3.9.1",
+    "gulp-notify": "^2.2.0",
+    "gulp-rename": "^1.2.2",
+    "gulp-sass": "^2.3.2",
+    "gulp-sourcemaps": "^1.6.0"
+  }
+}

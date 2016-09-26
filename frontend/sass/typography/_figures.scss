@@ -1,0 +1,52 @@
+figure {
+	background-color: transparentize($grey3, 0.75);
+	color: $grey1;
+	margin-bottom: 1.5rem;
+}
+
+blockquote {
+	margin: 0 1em;
+}
+
+figure p,
+aside p {
+	font-style: italic;
+	margin-bottom: 0;
+}
+
+figure blockquote {
+	display: block;
+	padding: 1em 0 0 0;
+}
+
+figcaption {
+	color: $grey2;
+	font-size: 0.65em;
+	font-style: italic;
+	font-weight: 200;
+	padding: 0.5em 1rem 1rem 0;
+	text-align: center;
+}
+
+aside {
+	background-color: transparentize($grey3, 0.75);
+	margin-bottom: 1.5em;
+}
+
+.typl8-pull-quote:before {
+	left: 0.05em;
+}
+
+.typl8-pull-quote:after {
+	right: 0.05em;
+	bottom: -0.25em;
+}
+
+.typl8-pull-quote:before, .typl8-pull-quote:after {
+	color: $darkyellow;
+}
+
+article .foot-note {
+	font-size: 0.65em;
+	padding: 0 1.3em;
+}

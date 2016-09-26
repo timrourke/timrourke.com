@@ -1,0 +1,10 @@
+.site-footer {
+	@extend .clearfix;
+	background-color: $grey0;
+	color: $grey2;
+	padding: 1em;
+}
+
+.site-footer__copyright {
+	text-align: center;
+}

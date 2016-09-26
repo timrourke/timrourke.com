@@ -28,3 +28,6 @@ _testmain.go
 
 #hugo content
 hugo/public
+
+node_modules
+bower_components

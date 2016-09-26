@@ -1,0 +1,65 @@
+/* Material Firewatch Theme */
+/* Original theme - https://github.com/saadq/Materialize/blob/master/themes/Material%20Firewatch.sublime-theme */
+.hljs-meta, .hljs-tag, .hljs-function, .hljs-params, .hljs-comment {
+  color: $grey3;
+}
+
+.hljs-name, .hljs-regexp {
+  color: $pink;
+}
+
+.hljs-attr, .hljs-number, .hljs-literal {
+  color: $darkyellow;
+}
+
+.hljs-string {
+  color: $beige;
+}
+
+.hljs-keyword {
+  color: $orange;
+}
+
+.hljs-built_in {
+  color: $green;
+}
+
+.hljs .javascript .hljs-attr {
+  color: $grey3;
+}
+
+.hljs-selector-tag {
+  color: $pink;
+}
+
+.hljs-selector-class {
+  color: $darkyellow;
+}
+
+.hljs-selector-id {
+  color: $lightgrey
+}
+
+.hljs.css .hljs-attribute {
+  color: $green;
+}
+
+.hljs.css .hljs-number,
+.hljs.css .hljs-literal {
+  color: $darkyellow;
+}
+
+pre {box-shadow: 0 0 5px rgba(40, 44, 52, 0.5);}
+
+pre code {
+  background: $grey0;
+  border: 0.5em solid $grey1;
+  color: $lightgrey;
+  display: block;
+  font-family: Menlo, Monaco, Consolas, monospace;
+  font-size: 65%;
+  line-height: 1.5em;
+  padding: 1em;
+  width: 100%;
+  overflow-y: scroll;
+}
