@@ -4,7 +4,8 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"github.com/gin-gonic/contrib/cors"
+	//	"github.com/gin-gonic/contrib/cors"
+	"github.com/gin-gonic/contrib/static"
 	"github.com/gin-gonic/gin"
 	"github.com/jmoiron/sqlx"
 	"github.com/joho/godotenv"
@@ -15,6 +16,7 @@ import (
 	"github.com/timrourke/timrourke.com/resource"
 	"github.com/timrourke/timrourke.com/storage"
 	"log"
+	"net/http"
 	"os"
 	"os/exec"
 	"time"
@@ -93,6 +95,30 @@ func initDB() *sqlx.DB {
 	return DB
 }
 
+// Add CORS headers to fin requwsts
+func CORSMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Writer.Header().Set("Access-Control-Allow-Origin", "http://localhost:4200")
+		c.Writer.Header().Set("Access-Control-Max-Age", "86400")
+		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PATCH, DELETE")
+		c.Writer.Header().Set("Access-Control-Allow-Headers", "Origin, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
+		c.Writer.Header().Set("Access-Control-Expose-Headers", "Content-Length")
+		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
+
+		c.Next()
+	}
+}
+
+// Add CORS headers to api2go requests
+func Api2goCorsMiddleware(c api2go.APIContexter, w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "http://localhost:4200")
+	w.Header().Set("Access-Control-Max-Age", "86400")
+	w.Header().Set("Access-Control-Allow-Methods", "PATCH, OPTIONS, GET, POST, PUT")
+	w.Header().Set("Access-Control-Allow-Headers", "Origin, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
+	w.Header().Set("Access-Control-Expose-Headers", "Content-Length")
+	w.Header().Set("Access-Control-Allow-Credentials", "true")
+}
+
 // Initialize gin-gonic routes
 func initRouter(DB *sqlx.DB) *gin.Engine {
 	r := gin.Default()
@@ -103,9 +129,7 @@ func initRouter(DB *sqlx.DB) *gin.Engine {
 		gingonic.New(r),
 	)
 
-	r.Use(cors.New(cors.Config{
-		AllowedOrigins: []string{"http://localhost:4200"},
-	}))
+	api.UseMiddleware(Api2goCorsMiddleware)
 
 	userStorage := storage.NewUserStorage(DB)
 	api.AddResource(model.User{}, resource.UserResource{
@@ -118,6 +142,18 @@ func initRouter(DB *sqlx.DB) *gin.Engine {
 	})
 
 	r.GET("/ping", getPing)
+
+	r.Use(static.Serve("/", static.LocalFile("./frontend/html", true)))
+	// r.Use(static.Serve("/", static.LocalFile("./hugo/public", true)))
+
+	r.Use(static.Serve("/admin", static.LocalFile("./admin/dist", true)))
+
+	r.GET("/admin/*wildcard", func(c *gin.Context) {
+		path := fmt.Sprintf("%v", c.Request.URL)
+		path = "./admin/dist/index.html"
+		fmt.Println("trying to load path: ", path)
+		http.ServeFile(c.Writer, c.Request, path)
+	})
 
 	return r
 }
